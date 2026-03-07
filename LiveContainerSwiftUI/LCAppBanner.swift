@@ -120,6 +120,7 @@ struct LCAppBanner : View {
                             .lineLimit(1)
                     }
                     Text(model.uiSelectedContainer?.name ?? "lc.appBanner.noDataFolder".loc).font(.system(size: 8)).foregroundColor(textColor)
+                    Text("Uses \(appInfo.bundleSize()) of storage").font(.system(size: 8)).foregroundColor(textColor.opacity(0.7))  // <-- ADD THIS
                 })
             }
             .allowsHitTesting(false)
