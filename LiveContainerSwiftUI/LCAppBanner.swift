@@ -68,59 +68,33 @@ struct LCAppBanner : View {
 
                 VStack (alignment: .leading, content: {
                     let color = (dynamicColors ? mainColor : Color("FontColor"))
-                    // note: keep this so the color updates when toggling dark mode
                     let textColor = colorScheme == .dark ? color.readableTextColor() : color.readableTextColor()
-                    HStack {
-                        Text(appInfo.displayName()).font(.system(size: 16)).bold()
-                        if model.uiIsShared {
-                            Image(systemName: "arrowshape.turn.up.left.fill")
-                                .font(.system(size: 8))
-                                .foregroundColor(.white)
-                                .frame(width: 16, height:16)
-                                .background(
-                                    Capsule().fill(Color("BadgeColor"))
-                                )
-                        }
-                        if model.uiIsJITNeeded {
-                            Image(systemName: "bolt.fill")
-                                .font(.system(size: 8))
-                                .foregroundColor(.white)
-                                .frame(width: 16, height:16)
-                                .background(
-                                    Capsule().fill(Color("JITBadgeColor"))
-                                )
-                        }
-#if is32BitSupported
-                        if model.uiIs32bit {
-                            Text("32")
-                                .font(.system(size: 8))
-                                .foregroundColor(.white)
-                                .frame(width: 16, height:16)
-                                .background(
-                                    Capsule().fill(Color("32BitBadgeColor"))
-                                )
-                        }
-#endif
-                        if model.uiIsLocked && !model.uiIsHidden {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 8))
-                                .foregroundColor(.white)
-                                .frame(width: 16, height:16)
-                                .background(
-                                    Capsule().fill(Color("BadgeColor"))
-                                )
-                        }
-                    }
-
-                    Text("\(appInfo.version() ?? "?") - \(appInfo.bundleIdentifier() ?? "?")").font(.system(size: 12)).foregroundColor(textColor)
+                    
+                    // App name and badges
+                    appNameRow(textColor: textColor)
+                    
+                    // Version and bundle ID
+                    Text("\(appInfo.version() ?? "?") - \(appInfo.bundleIdentifier() ?? "?")")
+                        .font(.system(size: 12))
+                        .foregroundColor(textColor)
+                    
+                    // Remark if exists
                     if !model.uiRemark.isEmpty {
                         Text(model.uiRemark)
                             .font(.system(size: 10))
                             .foregroundColor(textColor.opacity(0.8))
                             .lineLimit(1)
                     }
-                    Text(model.uiSelectedContainer?.name ?? "lc.appBanner.noDataFolder".loc).font(.system(size: 8)).foregroundColor(textColor)
-                    Text("Uses \(appInfo.bundleSize()) of storage").font(.system(size: 8)).foregroundColor(textColor.opacity(0.7))  // <-- ADD THIS
+                    
+                    // Container name
+                    Text(model.uiSelectedContainer?.name ?? "lc.appBanner.noDataFolder".loc)
+                        .font(.system(size: 8))
+                        .foregroundColor(textColor)
+                    
+                    // Storage size
+                    Text("Uses \(appInfo.bundleSize()) of storage")
+                        .font(.system(size: 8))
+                        .foregroundColor(textColor.opacity(0.7))
                 })
             }
             .allowsHitTesting(false)
@@ -314,6 +288,43 @@ struct LCAppBanner : View {
             mainColor = extractMainHueColor()
         }
     }
+    
+    // MARK: - Helper Views
+    
+    @ViewBuilder
+    private func appNameRow(textColor: Color) -> some View {
+        HStack {
+            Text(appInfo.displayName()).font(.system(size: 16)).bold()
+            if model.uiIsShared {
+                badgeView(systemName: "arrowshape.turn.up.left.fill", color: "BadgeColor")
+            }
+            if model.uiIsJITNeeded {
+                badgeView(systemName: "bolt.fill", color: "JITBadgeColor")
+            }
+#if is32BitSupported
+            if model.uiIs32bit {
+                Text("32")
+                    .font(.system(size: 8))
+                    .foregroundColor(.white)
+                    .frame(width: 16, height:16)
+                    .background(Capsule().fill(Color("32BitBadgeColor")))
+            }
+#endif
+            if model.uiIsLocked && !model.uiIsHidden {
+                badgeView(systemName: "lock.fill", color: "BadgeColor")
+            }
+        }
+    }
+    
+    private func badgeView(systemName: String, color: String) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 8))
+            .foregroundColor(.white)
+            .frame(width: 16, height:16)
+            .background(Capsule().fill(Color(color)))
+    }
+    
+    // MARK: - Functions
     
     func runApp(multitask: Bool) async {
         if appInfo.isLocked && !sharedModel.isHiddenAppUnlocked {
