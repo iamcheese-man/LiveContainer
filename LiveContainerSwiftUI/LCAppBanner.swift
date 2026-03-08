@@ -583,32 +583,26 @@ struct LCAppBanner : View {
         
         return ipaPath
     }
-
     func zipDirectory(sourceURL: URL, destinationURL: URL) async throws {
-        // Use Compression framework instead of Process
         let coordinator = NSFileCoordinator()
-        var error: NSError?
+        var coordinatorError: NSError?
     
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            coordinator.coordinate(readingItemAt: sourceURL, options: [.forUploading], error: &error) { zipURL in
+            coordinator.coordinate(readingItemAt: sourceURL, options: [.forUploading], error: &coordinatorError) { zipURL in
                 do {
-                    if FileManager.default.fileExists(atPath: destinationURL.path) {
-                        try FileManager.default.removeItem(at: destinationURL)
-                    }
-                    try FileManager.default.moveItem(at: zipURL, to: destinationURL)
+                    // The zipURL is temporary, copy it before it gets deleted
+                    try FileManager.default.copyItem(at: zipURL, to: destinationURL)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
                 }
             }
         
-            if let error = error {
-                continuation.resume(throwing: error)
+            if let coordinatorError = coordinatorError {
+                continuation.resume(throwing: coordinatorError)
             }
         }
     }
-
-
 
 }
 
