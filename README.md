@@ -3,7 +3,7 @@
 </div>
    
 #    Fork Info
-- Added "LCShared" Folder directly at root so you can easily access it from Files and tweaks.
+- Added "LCShared" Folder directly at root so you can easily access it from Files and tweaks. (Also an environment variable 'LC_SHARED_FOLDER' pointing to this folder.)
 - Added App Storage calculation (seeing how much storage each app and its data uses). This also includes Caching to not slow down LiveContainer
 - Added "Export App's IPA" or "Export App's IPA + Data", self explanatory feature.
 
