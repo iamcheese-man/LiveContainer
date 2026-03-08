@@ -273,34 +273,33 @@ struct LCAppBanner : View {
         return colorScheme == .dark ? color.readableTextColor() : color.readableTextColor()
     }
     
+    @ViewBuilder
     private var appContentView: some View {
-        Group {
-            // App name and badges
-            appNameRow(textColor: currentTextColor)
-            
-            // Version and bundle ID
-            Text("\(appInfo.version() ?? "?") - \(appInfo.bundleIdentifier() ?? "?")")
-                .font(.system(size: 12))
-                .foregroundColor(currentTextColor)
-            
-            // Remark if exists
-            if !model.uiRemark.isEmpty {
-                Text(model.uiRemark)
-                    .font(.system(size: 10))
-                    .foregroundColor(currentTextColor.opacity(0.8))
-                    .lineLimit(1)
-            }
-            
-            // Container name
-            Text(model.uiSelectedContainer?.name ?? "lc.appBanner.noDataFolder".loc)
-                .font(.system(size: 8))
-                .foregroundColor(currentTextColor)
-            
-            // Storage size
-            Text("Uses \(appInfo.bundleSize()) of storage")
-                .font(.system(size: 8))
-                .foregroundColor(currentTextColor.opacity(0.7))
+        // App name and badges
+        appNameRow(textColor: currentTextColor)
+        
+        // Version and bundle ID
+        Text("\(appInfo.version() ?? "?") - \(appInfo.bundleIdentifier() ?? "?")")
+            .font(.system(size: 12))
+            .foregroundColor(currentTextColor)
+        
+        // Remark if exists
+        if !model.uiRemark.isEmpty {
+            Text(model.uiRemark)
+                .font(.system(size: 10))
+                .foregroundColor(currentTextColor.opacity(0.8))
+                .lineLimit(1)
         }
+        
+        // Container name
+        Text(model.uiSelectedContainer?.name ?? "lc.appBanner.noDataFolder".loc)
+            .font(.system(size: 8))
+            .foregroundColor(currentTextColor)
+        
+        // Storage size
+        Text("Uses \(appInfo.bundleSize()) of storage")
+            .font(.system(size: 8))
+            .foregroundColor(currentTextColor.opacity(0.7))
     }
     
     // MARK: - Helper Views
