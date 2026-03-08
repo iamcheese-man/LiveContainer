@@ -67,34 +67,7 @@ struct LCAppBanner : View {
                     .clipShape(RoundedRectangle(cornerSize: CGSize(width:16, height: 16)))
 
                 VStack (alignment: .leading, content: {
-                    let color = (dynamicColors ? mainColor : Color("FontColor"))
-                    let textColor = colorScheme == .dark ? color.readableTextColor() : color.readableTextColor()
-                    
-                    // App name and badges
-                    appNameRow(textColor: textColor)
-                    
-                    // Version and bundle ID
-                    Text("\(appInfo.version() ?? "?") - \(appInfo.bundleIdentifier() ?? "?")")
-                        .font(.system(size: 12))
-                        .foregroundColor(textColor)
-                    
-                    // Remark if exists
-                    if !model.uiRemark.isEmpty {
-                        Text(model.uiRemark)
-                            .font(.system(size: 10))
-                            .foregroundColor(textColor.opacity(0.8))
-                            .lineLimit(1)
-                    }
-                    
-                    // Container name
-                    Text(model.uiSelectedContainer?.name ?? "lc.appBanner.noDataFolder".loc)
-                        .font(.system(size: 8))
-                        .foregroundColor(textColor)
-                    
-                    // Storage size
-                    Text("Uses \(appInfo.bundleSize()) of storage")
-                        .font(.system(size: 8))
-                        .foregroundColor(textColor.opacity(0.7))
+                    appContentView
                 })
             }
             .allowsHitTesting(false)
@@ -286,6 +259,47 @@ struct LCAppBanner : View {
         .onChange(of: darkModeIcon) { newVal in
             icon = appInfo.iconIsDarkIcon(newVal)
             mainColor = extractMainHueColor()
+        }
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var currentColor: Color {
+        dynamicColors ? mainColor : Color("FontColor")
+    }
+    
+    private var currentTextColor: Color {
+        let color = currentColor
+        return colorScheme == .dark ? color.readableTextColor() : color.readableTextColor()
+    }
+    
+    private var appContentView: some View {
+        Group {
+            // App name and badges
+            appNameRow(textColor: currentTextColor)
+            
+            // Version and bundle ID
+            Text("\(appInfo.version() ?? "?") - \(appInfo.bundleIdentifier() ?? "?")")
+                .font(.system(size: 12))
+                .foregroundColor(currentTextColor)
+            
+            // Remark if exists
+            if !model.uiRemark.isEmpty {
+                Text(model.uiRemark)
+                    .font(.system(size: 10))
+                    .foregroundColor(currentTextColor.opacity(0.8))
+                    .lineLimit(1)
+            }
+            
+            // Container name
+            Text(model.uiSelectedContainer?.name ?? "lc.appBanner.noDataFolder".loc)
+                .font(.system(size: 8))
+                .foregroundColor(currentTextColor)
+            
+            // Storage size
+            Text("Uses \(appInfo.bundleSize()) of storage")
+                .font(.system(size: 8))
+                .foregroundColor(currentTextColor.opacity(0.7))
         }
     }
     
