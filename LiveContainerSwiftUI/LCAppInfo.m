@@ -763,6 +763,11 @@ uint32_t dyld_get_sdk_version(const struct mach_header* mh);
     [self save];
 }
 - (NSString *)bundleSize {
+    // Check cache first
+    if (_info[@"cachedBundleSize"]) {
+        return _info[@"cachedBundleSize"];
+    }
+    
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *path = _bundlePath;
     
@@ -779,8 +784,15 @@ uint32_t dyld_get_sdk_version(const struct mach_header* mh);
         totalSize += [attrs fileSize];
     }
     
-    return [self formatBytes:totalSize];
+    NSString *sizeString = [self formatBytes:totalSize];
+    
+    // Cache it
+    _info[@"cachedBundleSize"] = sizeString;
+    [self save];
+    
+    return sizeString;
 }
+
 
 - (NSString *)formatBytes:(unsigned long long)bytes {
     double kb = 1024.0;
