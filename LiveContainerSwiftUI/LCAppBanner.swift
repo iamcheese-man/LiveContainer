@@ -585,17 +585,30 @@ struct LCAppBanner : View {
     }
 
     func zipDirectory(sourceURL: URL, destinationURL: URL) async throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-        process.arguments = ["-c", "-k", "--sequesterRsrc", "--keepParent", sourceURL.path, destinationURL.path]
+        // Use Compression framework instead of Process
+        let coordinator = NSFileCoordinator()
+        var error: NSError?
+    
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            coordinator.coordinate(readingItemAt: sourceURL, options: [.forUploading], error: &error) { zipURL in
+                do {
+                    if FileManager.default.fileExists(atPath: destinationURL.path) {
+                        try FileManager.default.removeItem(at: destinationURL)
+                    }
+                    try FileManager.default.moveItem(at: zipURL, to: destinationURL)
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
         
-        try process.run()
-        process.waitUntilExit()
-        
-        guard process.terminationStatus == 0 else {
-            throw "Failed to create IPA"
+            if let error = error {
+                continuation.resume(throwing: error)
+            }
         }
     }
+
+
 
 }
 
