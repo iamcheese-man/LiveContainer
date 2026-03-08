@@ -2,6 +2,11 @@
    <img width="217" height="217" src="./screenshots/livecontainer_icon.png" alt="Logo">
 </div>
    
+# Fork Info
+- Added "LCShared" Folder directly at root so you can easily access it from Files and tweaks.
+- Added App Storage calculation (seeing how much storage each app and its data uses). This also includes Caching to not slow down LiveContainer
+- Added "Export App's IPA" or "Export App's IPA + Data", self explanatory feature.
+
 
 <div align="center">
   <h1><b>LiveContainer</b></h1>
