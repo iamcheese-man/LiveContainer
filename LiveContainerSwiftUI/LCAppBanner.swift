@@ -205,6 +205,22 @@ struct LCAppBanner : View {
                     Label("lc.appBanner.addToHomeScreen".loc, systemImage: "plus.app")
                 }
                 
+                Menu {
+                    Button {
+                        Task { await exportIPA(includeData: false) }
+                    } label: {
+                        Label("Export IPA (App Only)", systemImage: "square.and.arrow.up")
+                    }
+    
+                    Button {
+                        Task { await exportIPA(includeData: true) }
+                    } label: {
+                        Label("Export IPA + Data", systemImage: "square.and.arrow.up.on.square")
+                    }
+                } label: {
+                    Label("Export as IPA", systemImage: "archivebox")
+                }
+                
                 Button {
                     openSettings()
                 } label: {
@@ -501,6 +517,84 @@ struct LCAppBanner : View {
     
     func copyError() {
         UIPasteboard.general.string = errorInfo
+    }
+    
+    // MARK: - Export IPA Functions
+    
+    func exportIPA(includeData: Bool) async {
+        do {
+            let exportURL = try await createExportIPA(includeData: includeData)
+            
+            // Show share sheet
+            await MainActor.run {
+                let activityVC = UIActivityViewController(
+                    activityItems: [exportURL],
+                    applicationActivities: nil
+                )
+                
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let rootVC = windowScene.windows.first?.rootViewController {
+                    activityVC.popoverPresentationController?.sourceView = rootVC.view
+                    rootVC.present(activityVC, animated: true)
+                }
+            }
+        } catch {
+            errorInfo = error.localizedDescription
+            errorShow = true
+        }
+    }
+
+    func createExportIPA(includeData: Bool) async throws -> URL {
+        let fm = FileManager.default
+        let tmpDir = fm.temporaryDirectory.appendingPathComponent("IPAExport-\(UUID().uuidString)")
+        try fm.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        
+        let payloadDir = tmpDir.appendingPathComponent("Payload")
+        try fm.createDirectory(at: payloadDir, withIntermediateDirectories: true)
+        
+        let appBundlePath = URL(fileURLWithPath: appInfo.bundlePath()!)
+        let destAppPath = payloadDir.appendingPathComponent(appBundlePath.lastPathComponent)
+        
+        // Copy app bundle
+        try fm.copyItem(at: appBundlePath, to: destAppPath)
+        
+        if includeData, let containerFolder = model.uiSelectedContainer?.folderName {
+            // Create data folder inside app bundle
+            let dataPath = LCPath.dataPath.appendingPathComponent(containerFolder)
+            let destDataPath = destAppPath.appendingPathComponent("LCUserData")
+            
+            if fm.fileExists(atPath: dataPath.path) {
+                try fm.copyItem(at: dataPath, to: destDataPath)
+            }
+        }
+        
+        // Zip it
+        let ipaName = "\(appInfo.displayName()!)-\(includeData ? "WithData" : "AppOnly").ipa"
+        let ipaPath = fm.temporaryDirectory.appendingPathComponent(ipaName)
+        
+        // Remove old IPA if exists
+        try? fm.removeItem(at: ipaPath)
+        
+        // Create ZIP
+        try await zipDirectory(sourceURL: tmpDir, destinationURL: ipaPath)
+        
+        // Cleanup
+        try? fm.removeItem(at: tmpDir)
+        
+        return ipaPath
+    }
+
+    func zipDirectory(sourceURL: URL, destinationURL: URL) async throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        process.arguments = ["-c", "-k", "--sequesterRsrc", "--keepParent", sourceURL.path, destinationURL.path]
+        
+        try process.run()
+        process.waitUntilExit()
+        
+        guard process.terminationStatus == 0 else {
+            throw "Failed to create IPA"
+        }
     }
 
 }
