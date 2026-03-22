@@ -467,7 +467,7 @@ struct LCAppBanner : View {
         if !darkModeIcon, let cachedColor = appInfo.cachedColor {
             return Color(uiColor: cachedColor)
         } else if darkModeIcon, let cachedColor = appInfo.cachedColorDark {
-            return Color(uiColor: cachedColorDark)
+            return Color(uiColor: cachedColor)
         }
         
         guard let cgImage = appInfo.iconIsDarkIcon(darkModeIcon).cgImage else { return Color.clear }
